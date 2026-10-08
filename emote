@@ -1,5 +1,5 @@
 --[[ 
-    Challo_Boy Edition (re-skinned: neon 16:9 UI, animations, sounds, auto-reapply on death)
+    Challo_Boy Edition v1.1 (re-skinned: neon 16:9 UI, animations, sounds, auto-reapply on death)
     Source script taken from: https://github.com/Roblox/creator-docs/blob/main/content/en-us/characters/emotes.md
 
     scriptblox: https://scriptblox.com/script/Universal-Script-7yd7-I-Emote-Script-48024
@@ -134,7 +134,8 @@ Config = {
     LastPlayedAnimationData = nil,
     UISounds = true,
     UIAnimations = true,
-    UIVolume = 1
+    UIVolume = 1,
+    EmoteBox = true
 }
 
 HUD = {
@@ -711,6 +712,8 @@ do
     local Debris = game:GetService("Debris")
 
     FX.Name = "Challo_Boy"
+    FX.Version = "1.1"
+    getgenv().ChalloBoyVersion = "1.1"
     FX.BaseScale = 1
     FX.LastToggle = 0
     FX.Colors = {
@@ -1216,7 +1219,7 @@ do
         brand.Font = Enum.Font.GothamBold
         brand.TextSize = 10
         brand.TextXAlignment = Enum.TextXAlignment.Right
-        brand.Text = "CHALLO_BOY  •  EMOTE HUB"
+        brand.Text = "CHALLO_BOY  •  EMOTE HUB  v1.1"
         brand.TextTransparency = 0.25
         brand.ZIndex = 61
         brand.Parent = main
@@ -1469,7 +1472,7 @@ do
                 sub.TextSize = 13
                 sub.TextColor3 = Color3.fromRGB(190, 200, 255)
                 sub.TextTransparency = 1
-                sub.Text = "E M O T E   H U B"
+                sub.Text = "E M O T E   H U B   •   v 1 . 1"
                 sub.ZIndex = 5
                 sub.Parent = card
 
@@ -1895,6 +1898,11 @@ TogglesUI.AutoReloadEnabled = SettingsLib.AddToggle(GeneralTab, "Auto Reapply on
         Content = v and "✅ ON: animation & UI will return after respawn" or "⛔ OFF",
         Duration = 3
     })
+end)
+
+TogglesUI.EmoteBox = SettingsLib.AddToggle(GeneralTab, "16:9 Emote Box", "Show emotes in a 16:9 box instead of the round wheel", Config.EmoteBox, function(v)
+    Config.EmoteBox = v
+    SaveConfig()
 end)
 
 TogglesUI.UIAnimations = SettingsLib.AddToggle(GeneralTab, "UI Animations", "Neon borders, sparkles, hover & open effects", Config.UIAnimations, function(v)
@@ -4991,6 +4999,7 @@ function updateScriptPriorityOverlay()
             
             blocker.InputBegan:Connect(function(input)
                 if State.hudEditorActive then return end
+                if ChalloFX.BoxActive and ChalloFX.BoxActive() then return end
                 if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
                 
                 local okWheel, emotesWheel = pcall(function()
@@ -7547,6 +7556,7 @@ function connectEvents()
 
     table.insert(State.guiConnections, UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if State.hudEditorActive then return end
+        if ChalloFX.BoxActive and ChalloFX.BoxActive() then return end
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
         
         local exists, emotesWheel = checkEmotesMenuExists()
@@ -9548,6 +9558,398 @@ function checkAndRecreateGUI()
         end
     end
 end
+
+-- ============================================================================
+--  Challo_Boy v1.1  |  Emote Box 16:9 (menggantikan tampilan wheel bulat)
+--  Wheel bawaan Roblox disembunyikan, logika script tetap sama.
+-- ============================================================================
+function ChalloFX.EmoteBoxEnabled()
+    return Config.EmoteBox ~= false
+end
+
+function ChalloFX.GetFront()
+    local ok, front = pcall(function()
+        return game:GetService("CoreGui").RobloxGui.EmotesMenu.Children.Main.EmotesWheel.Front.EmotesButtons
+    end)
+    if ok then return front end
+    return nil
+end
+
+function ChalloFX.BoxActive()
+    local box = ChalloFX.Box
+    if not (ChalloFX.EmoteBoxEnabled() and box and box.Parent) then return false end
+    if State.hudEditorActive then return false end
+    return box.Visible
+end
+
+function ChalloFX.BoxClick(index)
+    if State.hudEditorActive then return end
+    local front = ChalloFX.GetFront()
+    local slot = front and front:FindFirstChild(tostring(index))
+    if not (slot and slot:IsA("ImageLabel") and slot.Image ~= "") then return end
+
+    ChalloFX.Play("click")
+    handleSectorAction(index)
+
+    if State.currentMode == "emote" and not State.favoriteEnabled and not State.customAnimationEditorActive then
+        pcall(function() GuiService:SetEmotesMenuOpen(false) end)
+        pcall(function()
+            local ok, wheel = checkEmotesMenuExists()
+            if ok and wheel then wheel.Visible = false end
+        end)
+    end
+end
+
+function ChalloFX.BuildEmoteBox(wheel)
+    local FX = ChalloFX
+    local TweenService = game:GetService("TweenService")
+
+    local box = Instance.new("Frame")
+    box.Name = "ChalloBox"
+    box.AnchorPoint = Vector2.new(0.5, 0.5)
+    box.Position = UDim2.new(0.5, 0, 0.5, 0)
+    box.Size = UDim2.new(1.3, 0, 1, 0)
+    box.BackgroundColor3 = Color3.new(1, 1, 1)
+    box.BackgroundTransparency = 0.06
+    box.BorderSizePixel = 0
+    box.Active = true
+    box.ZIndex = 4
+    box.Parent = wheel
+
+    local ar = Instance.new("UIAspectRatioConstraint")
+    ar.AspectRatio = 16 / 9
+    ar.AspectType = Enum.AspectType.FitWithinMaxSize
+    ar.DominantAxis = Enum.DominantAxis.Width
+    ar.Parent = box
+
+    local sc = Instance.new("UIScale")
+    sc.Name = "PopScale"
+    sc.Parent = box
+
+    FX.Corner(box, 18)
+    local bg = Instance.new("UIGradient")
+    bg.Color = ColorSequence.new(Color3.fromRGB(8, 8, 24), Color3.fromRGB(48, 16, 86))
+    bg.Rotation = 35
+    bg.Parent = box
+    FX.Spin(bg, 12)
+    local stroke = FX.Stroke(box, 2.5, 70)
+    FX.Pulse(stroke, 2, 3.4, 1.3)
+
+    FX.Sparkles(box, 10, 5)
+
+    -- header
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.BackgroundTransparency = 1
+    title.Position = UDim2.new(0.03, 0, 0.02, 0)
+    title.Size = UDim2.new(0.5, 0, 0.1, 0)
+    title.Font = Enum.Font.GothamBlack
+    title.TextScaled = true
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Text = "CHALLO_BOY  •  EMOTES"
+    title.ZIndex = 7
+    title.Parent = box
+    local tc = Instance.new("UITextSizeConstraint")
+    tc.MaxTextSize = 20
+    tc.MinTextSize = 6
+    tc.Parent = title
+    FX.TextGradient(title, 55)
+
+    local info = Instance.new("TextLabel")
+    info.Name = "Info"
+    info.BackgroundTransparency = 1
+    info.AnchorPoint = Vector2.new(1, 0)
+    info.Position = UDim2.new(0.97, 0, 0.02, 0)
+    info.Size = UDim2.new(0.4, 0, 0.1, 0)
+    info.Font = Enum.Font.GothamBold
+    info.TextScaled = true
+    info.TextXAlignment = Enum.TextXAlignment.Right
+    info.TextColor3 = Color3.fromRGB(190, 200, 255)
+    info.Text = ""
+    info.ZIndex = 7
+    info.Parent = box
+    local ic = Instance.new("UITextSizeConstraint")
+    ic.MaxTextSize = 14
+    ic.MinTextSize = 6
+    ic.Parent = info
+
+    -- garis pemisah header
+    local line = Instance.new("Frame")
+    line.Name = "HeaderLine"
+    line.Active = false
+    line.BorderSizePixel = 0
+    line.BackgroundColor3 = Color3.new(1, 1, 1)
+    line.Position = UDim2.new(0.03, 0, 0.135, 0)
+    line.Size = UDim2.new(0.94, 0, 0, 2)
+    line.ZIndex = 7
+    line.Parent = box
+    local lg = Instance.new("UIGradient")
+    lg.Color = FX.Loop
+    lg.Parent = line
+    FX.Spin(lg, 100)
+
+    -- 8 tile (4 x 2)
+    FX.Tiles = {}
+    for i = 1, 8 do
+        local col = (i - 1) % 4
+        local row = math.floor((i - 1) / 4)
+
+        local tile = Instance.new("TextButton")
+        tile.Name = "Tile" .. i
+        tile.AutoButtonColor = false
+        tile.Text = ""
+        tile.BackgroundColor3 = Color3.new(1, 1, 1)
+        tile.BackgroundTransparency = 0.15
+        tile.BorderSizePixel = 0
+        tile.Position = UDim2.new(0.025 + col * 0.2425, 0, 0.17 + row * 0.415, 0)
+        tile.Size = UDim2.new(0.2225, 0, 0.385, 0)
+        tile.ZIndex = 8
+        tile.Parent = box
+        FX.Corner(tile, 12)
+
+        local tg = Instance.new("UIGradient")
+        tg.Color = ColorSequence.new(Color3.fromRGB(26, 24, 60), Color3.fromRGB(58, 26, 100))
+        tg.Rotation = 60
+        tg.Parent = tile
+
+        local ts = Instance.new("UIStroke")
+        ts.Name = "TileStroke"
+        ts.Thickness = 1.2
+        ts.Transparency = 0.45
+        ts.Color = FX.Colors.Cyan
+        ts.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        ts.Parent = tile
+
+        local hs = Instance.new("UIScale")
+        hs.Name = "HoverScale"
+        hs.Parent = tile
+
+        local icon = Instance.new("ImageLabel")
+        icon.Name = "Icon"
+        icon.BackgroundTransparency = 1
+        icon.AnchorPoint = Vector2.new(0.5, 0.5)
+        icon.Position = UDim2.new(0.5, 0, 0.42, 0)
+        icon.Size = UDim2.new(0.82, 0, 0.66, 0)
+        icon.ScaleType = Enum.ScaleType.Fit
+        icon.Image = ""
+        icon.ZIndex = 9
+        icon.Parent = tile
+        local iar = Instance.new("UIAspectRatioConstraint")
+        iar.AspectRatio = 1
+        iar.AspectType = Enum.AspectType.FitWithinMaxSize
+        iar.Parent = icon
+
+        local nm = Instance.new("TextLabel")
+        nm.Name = "NameLabel"
+        nm.BackgroundTransparency = 1
+        nm.AnchorPoint = Vector2.new(0.5, 0.5)
+        nm.Position = UDim2.new(0.5, 0, 0.9, 0)
+        nm.Size = UDim2.new(0.94, 0, 0.17, 0)
+        nm.Font = Enum.Font.GothamMedium
+        nm.TextScaled = true
+        nm.TextColor3 = Color3.fromRGB(225, 225, 245)
+        nm.Text = ""
+        nm.ZIndex = 9
+        nm.Parent = tile
+        local nc = Instance.new("UITextSizeConstraint")
+        nc.MaxTextSize = 12
+        nc.MinTextSize = 5
+        nc.Parent = nm
+
+        local badge = Instance.new("TextLabel")
+        badge.Name = "Badge"
+        badge.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        badge.BackgroundTransparency = 0.45
+        badge.Position = UDim2.new(0.05, 0, 0.05, 0)
+        badge.Size = UDim2.new(0.2, 0, 0.17, 0)
+        badge.Font = Enum.Font.GothamBold
+        badge.TextScaled = true
+        badge.TextColor3 = Color3.new(1, 1, 1)
+        badge.Text = tostring(i)
+        badge.ZIndex = 10
+        badge.Parent = tile
+        FX.Corner(badge, 6)
+        local bc = Instance.new("UITextSizeConstraint")
+        bc.MaxTextSize = 11
+        bc.MinTextSize = 5
+        bc.Parent = badge
+
+        local fav = Instance.new("ImageLabel")
+        fav.Name = "Fav"
+        fav.BackgroundTransparency = 1
+        fav.AnchorPoint = Vector2.new(1, 0)
+        fav.Position = UDim2.new(0.95, 0, 0.05, 0)
+        fav.Size = UDim2.new(0.2, 0, 0.2, 0)
+        fav.Visible = false
+        fav.ZIndex = 10
+        fav.Parent = tile
+        local far = Instance.new("UIAspectRatioConstraint")
+        far.AspectRatio = 1
+        far.Parent = fav
+
+        tile.MouseEnter:Connect(function()
+            FX.Play("hover")
+            FX.Tween(hs, 0.15, {Scale = 1.05}, Enum.EasingStyle.Quad)
+            FX.Tween(ts, 0.15, {Thickness = 2.6, Transparency = 0}, Enum.EasingStyle.Quad)
+            FX.Tween(tile, 0.15, {BackgroundTransparency = 0}, Enum.EasingStyle.Quad)
+        end)
+        tile.MouseLeave:Connect(function()
+            FX.Tween(hs, 0.2, {Scale = 1}, Enum.EasingStyle.Quad)
+            FX.Tween(ts, 0.2, {Thickness = 1.2, Transparency = 0.45}, Enum.EasingStyle.Quad)
+            FX.Tween(tile, 0.2, {BackgroundTransparency = 0.15}, Enum.EasingStyle.Quad)
+        end)
+        tile.MouseButton1Down:Connect(function()
+            FX.Tween(hs, 0.08, {Scale = 0.94}, Enum.EasingStyle.Quad)
+        end)
+        tile.MouseButton1Up:Connect(function()
+            FX.Tween(hs, 0.14, {Scale = 1.05}, Enum.EasingStyle.Back)
+        end)
+        tile.MouseButton1Click:Connect(function()
+            FX.BoxClick(i)
+        end)
+
+        FX.Tiles[i] = {Tile = tile, Icon = icon, Name = nm, Fav = fav}
+    end
+
+    FX.BoxTitle = title
+    FX.BoxInfo = info
+
+    -- animasi muncul setiap wheel dibuka
+    local function pop()
+        if not box.Parent then return end
+        FX.Play("open")
+        sc.Scale = 0.82
+        FX.Tween(sc, 0.5, {Scale = 1}, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    end
+    wheel:GetPropertyChangedSignal("Visible"):Connect(function()
+        if wheel.Visible then pop() end
+    end)
+    if wheel.Visible then pop() end
+
+    return box
+end
+
+function ChalloFX.EnsureEmoteBox()
+    local FX = ChalloFX
+    local ok, wheel = checkEmotesMenuExists()
+    if not ok or not wheel then return end
+
+    local back = wheel:FindFirstChild("Back")
+    local front = wheel:FindFirstChild("Front")
+    local box = wheel:FindFirstChild("ChalloBox")
+
+    if not FX.EmoteBoxEnabled() then
+        if box then box:Destroy() end
+        FX.Box = nil
+        if FX.NativeHidden then
+            if back then back.Visible = true end
+            if front then front.Visible = true end
+            FX.NativeHidden = false
+        end
+        return
+    end
+
+    if not box then
+        box = FX.BuildEmoteBox(wheel)
+    end
+    FX.Box = box
+
+    -- sembunyikan wheel bulat bawaan (dan jaga agar tetap tersembunyi)
+    if back and back.Visible then back.Visible = false end
+    if front and front.Visible then front.Visible = false end
+    FX.NativeHidden = true
+end
+
+function ChalloFX.UpdateEmoteBox()
+    local FX = ChalloFX
+    local box = FX.Box
+    if not (box and box.Parent and FX.Tiles) then return end
+
+    local front = FX.GetFront()
+    local editing = State.hudEditorActive
+    box.Active = not editing
+
+    local sig = {}
+    for i = 1, 8 do
+        local slot = front and front:FindFirstChild(tostring(i))
+        if slot and slot:IsA("ImageLabel") then
+            sig[#sig + 1] = slot.Image
+        else
+            sig[#sig + 1] = ""
+        end
+    end
+    local sigStr = table.concat(sig, "|")
+
+    -- nama emote hanya dihitung ulang kalau isi slot berubah
+    if sigStr ~= FX.LastSig then
+        FX.LastSig = sigStr
+        FX.SlotNames = {}
+        pcall(function()
+            local _, hum = getCharacterAndHumanoid()
+            local desc = hum and hum:FindFirstChildOfClass("HumanoidDescription")
+            if desc then
+                for _, e in ipairs(desc:GetEquippedEmotes()) do
+                    FX.SlotNames[e.Slot] = e.Name
+                end
+            end
+        end)
+    end
+
+    for i = 1, 8 do
+        local t = FX.Tiles[i]
+        local slot = front and front:FindFirstChild(tostring(i))
+        if t then
+            t.Tile.Active = not editing
+            local img = sig[i]
+            if slot and slot:IsA("ImageLabel") and img ~= "" then
+                t.Icon.Visible = true
+                if t.Icon.Image ~= img then t.Icon.Image = img end
+                t.Icon.ImageColor3 = slot.ImageColor3
+                local nmText = (FX.SlotNames and FX.SlotNames[i]) or ""
+                if t.Name.Text ~= nmText then t.Name.Text = nmText end
+                t.Tile.Visible = true
+
+                local fi = slot:FindFirstChild("FavoriteIcon")
+                if fi and fi:IsA("ImageLabel") and fi.Visible and fi.Image ~= "" then
+                    t.Fav.Visible = true
+                    t.Fav.Image = fi.Image
+                    t.Fav.ImageColor3 = fi.ImageColor3
+                else
+                    t.Fav.Visible = false
+                end
+            else
+                t.Icon.Visible = false
+                t.Icon.Image = ""
+                t.Name.Text = ""
+                t.Fav.Visible = false
+            end
+        end
+    end
+
+    if FX.BoxInfo then
+        local modeText = "EMOTES"
+        if State.customAnimationEditorActive then
+            modeText = "ANIMATION EDITOR"
+        elseif State.favoriteEnabled then
+            modeText = "FAVORITES"
+        elseif State.currentMode == "animation" then
+            modeText = "ANIMATIONS"
+        end
+        local txt = modeText .. "   •   PAGE " .. tostring(State.currentPage or 1) .. " / " .. tostring(State.totalPages or 1)
+        if FX.BoxInfo.Text ~= txt then FX.BoxInfo.Text = txt end
+    end
+end
+
+task.spawn(function()
+    while true do
+        pcall(ChalloFX.EnsureEmoteBox)
+        local box = ChalloFX.Box
+        if box and box.Parent and box.Parent.Visible then
+            pcall(ChalloFX.UpdateEmoteBox)
+        end
+        task.wait(0.1)
+    end
+end)
 
 function ChalloFX.RestoreUI()
     pcall(function() updateGUIColors() end)
