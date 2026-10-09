@@ -1,5 +1,5 @@
 --[[ 
-    Challo_Boy Edition v1.2 (re-skinned: neon 16:9 UI, animations, sounds, auto-reapply on death)
+    Challo_Boy Edition v1.3 (re-skinned: neon 16:9 UI, animations, sounds, auto-reapply on death)
     Source script taken from: https://github.com/Roblox/creator-docs/blob/main/content/en-us/characters/emotes.md
 
     scriptblox: https://scriptblox.com/script/Universal-Script-7yd7-I-Emote-Script-48024
@@ -712,8 +712,8 @@ do
     local Debris = game:GetService("Debris")
 
     FX.Name = "Challo_Boy"
-    FX.Version = "1.2"
-    getgenv().ChalloBoyVersion = "1.2"
+    FX.Version = "1.3"
+    getgenv().ChalloBoyVersion = "1.3"
     FX.BaseScale = 1
     FX.LastToggle = 0
     FX.Colors = {
@@ -724,6 +724,16 @@ do
         Dark2 = Color3.fromRGB(40, 16, 72),
         White = Color3.new(1, 1, 1)
     }
+    -- pelangi RGB (awal = akhir) untuk teks
+    FX.RGB = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 70, 70)),
+        ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 225, 70)),
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(80, 255, 110)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(70, 235, 255)),
+        ColorSequenceKeypoint.new(0.67, Color3.fromRGB(110, 120, 255)),
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 80, 235)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 70, 70))
+    })
     -- gradient melingkar (awal = akhir) supaya rotasinya mulus tanpa putus
     FX.Loop = ColorSequence.new({
         ColorSequenceKeypoint.new(0, FX.Colors.Cyan),
@@ -815,7 +825,7 @@ do
     -- ---------------------------------------------------------------- HELPERS
     function FX.Corner(parent, radius)
         local c = Instance.new("UICorner")
-        c.CornerRadius = UDim.new(0, radius or 12)
+        c.CornerRadius = UDim.new(0, (radius and radius >= 50) and radius or 3)
         c.Parent = parent
         return c
     end
@@ -843,14 +853,16 @@ do
     })
 
     function FX.TextGradient(label, speed)
-        label.TextColor3 = Color3.new(1, 1, 1)
-        label.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
-        label.TextStrokeTransparency = 0.25
+        local ex = label:FindFirstChild("ChalloTextGradient")
+        if ex then return ex end
         local g = Instance.new("UIGradient")
         g.Name = "ChalloTextGradient"
-        g.Color = FX.Metal
-        g.Rotation = 90
+        g.Color = FX.RGB
         g.Parent = label
+        FX.Spin(g, speed or 80)
+        label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+        label.TextStrokeTransparency = 0.2
         return g
     end
 
@@ -881,8 +893,9 @@ do
                 obj.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
                 if obj.TextStrokeTransparency > 0.45 then obj.TextStrokeTransparency = 0.45 end
                 local bl, tl = bgLum(), lum(obj.TextColor3)
-                if bl < 0.45 and tl < 0.6 then
-                    obj.TextColor3 = Color3.fromRGB(240, 243, 255)
+                if bl <= 0.6 then
+                    if not obj:FindFirstChild("ChalloTextGradient") then FX.TextGradient(obj) end
+                    if obj.TextColor3 ~= Color3.new(1, 1, 1) then obj.TextColor3 = Color3.new(1, 1, 1) end
                 elseif bl > 0.6 and tl > 0.75 then
                     obj.TextColor3 = Color3.fromRGB(18, 18, 30)
                     obj.TextStrokeTransparency = 1
@@ -1110,6 +1123,7 @@ do
         content.Text = tostring(data.Content or "")
         content.LayoutOrder = 2
         content.Parent = body
+        FX.TextGradient(content)
 
         -- aksen kiri
         local accent = Instance.new("Frame")
@@ -1207,7 +1221,8 @@ do
             workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(fit)
         end)
 
-        if not main:FindFirstChildOfClass("UICorner") then FX.Corner(main, 16) end
+        local mainCorner = main:FindFirstChildOfClass("UICorner") or FX.Corner(main)
+        mainCorner.CornerRadius = UDim.new(0, 3)
 
         -- ------------------------------------------- border neon berputar
         local stroke = FX.Stroke(main, 2.5, 70)
@@ -1253,7 +1268,7 @@ do
         brand.Font = Enum.Font.GothamBold
         brand.TextSize = 10
         brand.TextXAlignment = Enum.TextXAlignment.Right
-        brand.Text = "CHALLO_BOY  •  EMOTE HUB  v1.2"
+        brand.Text = "CHALLO_BOY  •  EMOTE HUB  v1.3"
         brand.TextTransparency = 0.25
         brand.ZIndex = 61
         brand.Parent = main
@@ -1530,9 +1545,10 @@ do
                 sub.TextSize = 13
                 sub.TextColor3 = Color3.fromRGB(190, 200, 255)
                 sub.TextTransparency = 1
-                sub.Text = "E M O T E   H U B   •   v 1 . 2"
+                sub.Text = "E M O T E   H U B   •   v 1 . 3"
                 sub.ZIndex = 5
                 sub.Parent = card
+                FX.TextGradient(sub)
 
                 local status = Instance.new("TextLabel")
                 status.Name = "Status"
@@ -1546,6 +1562,7 @@ do
                 status.Text = "Initializing..."
                 status.ZIndex = 5
                 status.Parent = card
+                FX.TextGradient(status)
 
                 local track = Instance.new("Frame")
                 track.Name = "Track"
@@ -1888,7 +1905,7 @@ ToggleBtn.Image = "rbxassetid://79568054778195"
 
 
 local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 10)
+ToggleCorner.CornerRadius = UDim.new(0, 3)
 ToggleCorner.Parent = ToggleBtn
 ChalloFX.StyleToggleButton(ToggleBtn)
 
@@ -9654,8 +9671,8 @@ function ChalloFX.StyleWheelUI()
             c = Instance.new("UICorner")
             c.Parent = el
         end
-        if c.CornerRadius ~= UDim.new(0, radius or 10) then
-            c.CornerRadius = UDim.new(0, radius or 10)
+        if c.CornerRadius ~= UDim.new(0, 3) then
+            c.CornerRadius = UDim.new(0, 3)
         end
         if not el:FindFirstChild("ChalloStroke") then
             local st = FX.Stroke(el, 1.6, 80)
@@ -9675,6 +9692,7 @@ function ChalloFX.StyleWheelUI()
         if el:IsA("TextBox") then
             el.PlaceholderColor3 = Color3.fromRGB(185, 192, 230)
         end
+        if not el:FindFirstChild("ChalloTextGradient") then FX.TextGradient(el) end
     end
 
     local function icon(el)
@@ -9818,6 +9836,7 @@ function ChalloFX.BuildEmoteBox(wheel)
     info.Text = ""
     info.ZIndex = 7
     info.Parent = box
+    FX.TextGradient(info)
     local ic = Instance.new("UITextSizeConstraint")
     ic.MaxTextSize = 14
     ic.MinTextSize = 6
@@ -9903,6 +9922,7 @@ function ChalloFX.BuildEmoteBox(wheel)
         nm.Text = ""
         nm.ZIndex = 9
         nm.Parent = tile
+        FX.TextGradient(nm)
         local nc = Instance.new("UITextSizeConstraint")
         nc.MaxTextSize = 12
         nc.MinTextSize = 5
@@ -9920,6 +9940,7 @@ function ChalloFX.BuildEmoteBox(wheel)
         badge.Text = tostring(i)
         badge.ZIndex = 10
         badge.Parent = tile
+        FX.TextGradient(badge)
         FX.Corner(badge, 6)
         local bc = Instance.new("UITextSizeConstraint")
         bc.MaxTextSize = 11
