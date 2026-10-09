@@ -1,5 +1,5 @@
 --[[ 
-    Challo_Boy Edition v1.1 (re-skinned: neon 16:9 UI, animations, sounds, auto-reapply on death)
+    Challo_Boy Edition v1.2 (re-skinned: neon 16:9 UI, animations, sounds, auto-reapply on death)
     Source script taken from: https://github.com/Roblox/creator-docs/blob/main/content/en-us/characters/emotes.md
 
     scriptblox: https://scriptblox.com/script/Universal-Script-7yd7-I-Emote-Script-48024
@@ -712,8 +712,8 @@ do
     local Debris = game:GetService("Debris")
 
     FX.Name = "Challo_Boy"
-    FX.Version = "1.1"
-    getgenv().ChalloBoyVersion = "1.1"
+    FX.Version = "1.2"
+    getgenv().ChalloBoyVersion = "1.2"
     FX.BaseScale = 1
     FX.LastToggle = 0
     FX.Colors = {
@@ -835,14 +835,62 @@ do
         return stroke, g
     end
 
+    -- teks "metal": putih-perak berkilau + outline gelap, selalu jelas terbaca
+    FX.Metal = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(178, 204, 240)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(246, 249, 255))
+    })
+
     function FX.TextGradient(label, speed)
         label.TextColor3 = Color3.new(1, 1, 1)
+        label.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+        label.TextStrokeTransparency = 0.25
         local g = Instance.new("UIGradient")
         g.Name = "ChalloTextGradient"
-        g.Color = FX.Loop
+        g.Color = FX.Metal
+        g.Rotation = 90
         g.Parent = label
-        FX.Spin(g, speed or 45)
         return g
+    end
+
+    -- kontras otomatis: teks terang di latar gelap, teks gelap di latar terang
+    function FX.Readable(obj)
+        pcall(function()
+            if obj:GetAttribute("ChalloRead") then return end
+            obj:SetAttribute("ChalloRead", true)
+            local function lum(c) return 0.299 * c.R + 0.587 * c.G + 0.114 * c.B end
+            local function bgLum()
+                if obj:IsA("TextButton") and obj.BackgroundTransparency < 0.85 then
+                    return lum(obj.BackgroundColor3)
+                end
+                local cur = obj.Parent
+                while cur and cur:IsA("GuiObject") do
+                    if cur.BackgroundTransparency < 0.85 then
+                        return lum(cur.BackgroundColor3)
+                    end
+                    cur = cur.Parent
+                end
+                return 0.1
+            end
+            local function fix()
+                if obj.Font ~= Enum.Font.GothamBold and obj.Font ~= Enum.Font.GothamBlack then
+                    obj.Font = Enum.Font.GothamBold
+                end
+                obj.TextTransparency = math.min(obj.TextTransparency, 0.05)
+                obj.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+                if obj.TextStrokeTransparency > 0.45 then obj.TextStrokeTransparency = 0.45 end
+                local bl, tl = bgLum(), lum(obj.TextColor3)
+                if bl < 0.45 and tl < 0.6 then
+                    obj.TextColor3 = Color3.fromRGB(240, 243, 255)
+                elseif bl > 0.6 and tl > 0.75 then
+                    obj.TextColor3 = Color3.fromRGB(18, 18, 30)
+                    obj.TextStrokeTransparency = 1
+                end
+            end
+            fix()
+            obj:GetPropertyChangedSignal("TextColor3"):Connect(fix)
+        end)
     end
 
     function FX.Pulse(stroke, from, to, t)
@@ -1039,7 +1087,7 @@ do
         title.BackgroundTransparency = 1
         title.Size = UDim2.new(1, 0, 0, 18)
         title.Font = Enum.Font.GothamBold
-        title.TextSize = 14
+        title.TextSize = 15
         title.TextXAlignment = Enum.TextXAlignment.Left
         title.Text = tostring(data.Title or "Challo_Boy")
         title.LayoutOrder = 1
@@ -1051,9 +1099,11 @@ do
         content.BackgroundTransparency = 1
         content.Size = UDim2.new(1, 0, 0, 0)
         content.AutomaticSize = Enum.AutomaticSize.Y
-        content.Font = Enum.Font.Gotham
-        content.TextSize = 13
-        content.TextColor3 = Color3.fromRGB(215, 215, 235)
+        content.Font = Enum.Font.GothamMedium
+        content.TextSize = 14
+        content.TextColor3 = Color3.fromRGB(245, 246, 255)
+        content.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+        content.TextStrokeTransparency = 0.45
         content.TextXAlignment = Enum.TextXAlignment.Left
         content.TextYAlignment = Enum.TextYAlignment.Top
         content.TextWrapped = true
@@ -1175,22 +1225,6 @@ do
         bg.Parent = main
         FX.Spin(bg, 10)
 
-        -- lapisan tint kaca (neon) di atas konten, tidak menghalangi klik
-        local tint = Instance.new("Frame")
-        tint.Name = "ChalloTint"
-        tint.Active = false
-        tint.BorderSizePixel = 0
-        tint.BackgroundColor3 = Color3.new(1, 1, 1)
-        tint.BackgroundTransparency = 0.9
-        tint.Size = UDim2.fromScale(1, 1)
-        tint.ZIndex = 45
-        tint.Parent = main
-        FX.Corner(tint, 16)
-        local tg = Instance.new("UIGradient")
-        tg.Color = FX.Loop
-        tg.Parent = tint
-        FX.Spin(tg, 25)
-
         -- garis aksen atas
         local top = Instance.new("Frame")
         top.Name = "ChalloTopLine"
@@ -1219,7 +1253,7 @@ do
         brand.Font = Enum.Font.GothamBold
         brand.TextSize = 10
         brand.TextXAlignment = Enum.TextXAlignment.Right
-        brand.Text = "CHALLO_BOY  •  EMOTE HUB  v1.1"
+        brand.Text = "CHALLO_BOY  •  EMOTE HUB  v1.2"
         brand.TextTransparency = 0.25
         brand.ZIndex = 61
         brand.Parent = main
@@ -1250,7 +1284,8 @@ do
                     obj.Visible = false
                 end
 
-                if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+                if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+                    if not obj:IsA("TextBox") then FX.Readable(obj) end
                     local function rebrand()
                         local t = obj.Text
                         if type(t) ~= "string" then return end
@@ -1265,8 +1300,10 @@ do
                             obj.Visible = false
                         end
                     end
-                    rebrand()
-                    obj:GetPropertyChangedSignal("Text"):Connect(rebrand)
+                    if not obj:IsA("TextBox") then
+                        rebrand()
+                        obj:GetPropertyChangedSignal("Text"):Connect(rebrand)
+                    end
                 end
 
                 if (obj:IsA("TextButton") or obj:IsA("ImageButton")) and not obj:GetAttribute("ChalloHooked") then
@@ -1339,9 +1376,9 @@ do
             plate.Size = UDim2.fromScale(1, 1)
             plate.ZIndex = 1
             plate.Parent = btn
-            FX.Corner(plate, 14)
+            FX.Corner(plate, 12)
             local g = Instance.new("UIGradient")
-            g.Color = ColorSequence.new(FX.Colors.Dark, FX.Colors.Dark2)
+            g.Color = ColorSequence.new(Color3.fromRGB(10, 10, 26), Color3.fromRGB(48, 16, 86))
             g.Rotation = 45
             g.Parent = plate
             local stroke = FX.Stroke(plate, 2, 100)
@@ -1350,12 +1387,33 @@ do
             local icon = Instance.new("ImageLabel")
             icon.Name = "Icon"
             icon.BackgroundTransparency = 1
-            icon.AnchorPoint = Vector2.new(0.5, 0.5)
-            icon.Position = UDim2.fromScale(0.5, 0.5)
-            icon.Size = UDim2.fromScale(0.6, 0.6)
+            icon.AnchorPoint = Vector2.new(0, 0.5)
+            icon.Position = UDim2.new(0.07, 0, 0.5, 0)
+            icon.Size = UDim2.new(0.32, 0, 0.62, 0)
             icon.Image = img
             icon.ZIndex = 2
             icon.Parent = btn
+            local iar = Instance.new("UIAspectRatioConstraint")
+            iar.AspectRatio = 1
+            iar.Parent = icon
+
+            local lbl = Instance.new("TextLabel")
+            lbl.Name = "Label"
+            lbl.BackgroundTransparency = 1
+            lbl.AnchorPoint = Vector2.new(0, 0.5)
+            lbl.Position = UDim2.new(0.43, 0, 0.5, 0)
+            lbl.Size = UDim2.new(0.53, 0, 0.42, 0)
+            lbl.Font = Enum.Font.GothamBlack
+            lbl.TextScaled = true
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.Text = "SETTINGS"
+            lbl.ZIndex = 2
+            lbl.Parent = btn
+            local lc = Instance.new("UITextSizeConstraint")
+            lc.MaxTextSize = 16
+            lc.MinTextSize = 6
+            lc.Parent = lbl
+            FX.TextGradient(lbl)
 
             btn.MouseEnter:Connect(function()
                 FX.Tween(icon, 0.4, {Rotation = 90}, Enum.EasingStyle.Back)
@@ -1472,7 +1530,7 @@ do
                 sub.TextSize = 13
                 sub.TextColor3 = Color3.fromRGB(190, 200, 255)
                 sub.TextTransparency = 1
-                sub.Text = "E M O T E   H U B   •   v 1 . 1"
+                sub.Text = "E M O T E   H U B   •   v 1 . 2"
                 sub.ZIndex = 5
                 sub.Parent = card
 
@@ -1824,8 +1882,8 @@ ToggleBtn.Name = "ToggleSettings"
 ToggleBtn.Parent = ToggleContainer
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 ToggleBtn.BackgroundTransparency = 0.4
-ToggleBtn.Position = UDim2.new(0, 12, 1, -62)
-ToggleBtn.Size = UDim2.fromOffset(48, 48)
+ToggleBtn.Position = UDim2.new(0, 12, 1, -72)
+ToggleBtn.Size = UDim2.fromOffset(104, 58)
 ToggleBtn.Image = "rbxassetid://79568054778195"
 
 
@@ -2368,6 +2426,8 @@ function updateGUIColors()
     if ApplyFavoriteButtonVisual then
         ApplyFavoriteButtonVisual()
     end
+
+    if ChalloFX.StyleWheelUI then pcall(ChalloFX.StyleWheelUI) end
 
     local function applyHUDProperties()
         if not Config.HUDProperties then return end
@@ -9563,6 +9623,94 @@ end
 --  Challo_Boy v1.1  |  Emote Box 16:9 (menggantikan tampilan wheel bulat)
 --  Wheel bawaan Roblox disembunyikan, logika script tetap sama.
 -- ============================================================================
+-- ============================================================================
+--  Challo_Boy v1.2  |  gaya seragam: semua elemen UI wheel jadi kotak neon
+--  + teks tebal berkilau (metal) dengan outline supaya selalu jelas terbaca
+-- ============================================================================
+function ChalloFX.StyleWheelUI()
+    local FX = ChalloFX
+    local PLATE = Color3.fromRGB(18, 16, 42)
+    local WHITE = Color3.fromRGB(245, 247, 255)
+
+    local function custom(name, key)
+        local hp = Config.HUDProperties and Config.HUDProperties[name]
+        return hp and hp[key] ~= nil
+    end
+
+    local function lum(c)
+        return 0.299 * c.R + 0.587 * c.G + 0.114 * c.B
+    end
+
+    local function box(el, radius)
+        if not (el and el.Parent) then return end
+        if not custom(el.Name, "BgColor") and el.BackgroundColor3 ~= PLATE then
+            el.BackgroundColor3 = PLATE
+        end
+        if not custom(el.Name, "BgTrans") and el.BackgroundTransparency ~= 0.06 then
+            el.BackgroundTransparency = 0.06
+        end
+        local c = el:FindFirstChildOfClass("UICorner")
+        if not c then
+            c = Instance.new("UICorner")
+            c.Parent = el
+        end
+        if c.CornerRadius ~= UDim.new(0, radius or 10) then
+            c.CornerRadius = UDim.new(0, radius or 10)
+        end
+        if not el:FindFirstChild("ChalloStroke") then
+            local st = FX.Stroke(el, 1.6, 80)
+            st.Transparency = 0.1
+        end
+    end
+
+    local function text(el)
+        if not (el and el.Parent) then return end
+        if not custom(el.Name, "TxtColor") and el.TextColor3 ~= WHITE then
+            el.TextColor3 = WHITE
+        end
+        if el.Font ~= Enum.Font.GothamBold then el.Font = Enum.Font.GothamBold end
+        el.TextTransparency = 0
+        el.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+        el.TextStrokeTransparency = 0.25
+        if el:IsA("TextBox") then
+            el.PlaceholderColor3 = Color3.fromRGB(185, 192, 230)
+        end
+    end
+
+    local function icon(el)
+        if not (el and el.Parent) then return end
+        if el.ImageTransparency ~= 0 then el.ImageTransparency = 0 end
+        local c = el.ImageColor3
+        if lum(c) < 0.6 and not custom(el.Name, "ImgColor") then
+            el.ImageColor3 = c:Lerp(Color3.new(1, 1, 1), 0.78)
+        end
+    end
+
+    -- kotak
+    box(UI.Under, 12)
+    box(UI.Top, 10)
+    for _, n in ipairs({"EmoteWalkButton", "SpeedEmote", "Changepage", "SpeedBox", "Favorite", "Reload"}) do
+        box(UI[n], 10)
+    end
+    if UI.CustomFrames then
+        for _, f in pairs(UI.CustomFrames) do box(f, 10) end
+    end
+
+    -- teks
+    text(UI._4pages)
+    text(UI._3TextLabel)
+    text(UI._2Routenumber)
+    text(UI.Search)
+    text(UI.SpeedBox)
+
+    -- ikon
+    icon(UI._1left)
+    icon(UI._9right)
+    for _, n in ipairs({"EmoteWalkButton", "SpeedEmote", "Changepage", "Favorite", "Reload"}) do
+        icon(UI[n])
+    end
+end
+
 function ChalloFX.EmoteBoxEnabled()
     return Config.EmoteBox ~= false
 end
@@ -9664,7 +9812,9 @@ function ChalloFX.BuildEmoteBox(wheel)
     info.Font = Enum.Font.GothamBold
     info.TextScaled = true
     info.TextXAlignment = Enum.TextXAlignment.Right
-    info.TextColor3 = Color3.fromRGB(190, 200, 255)
+    info.TextColor3 = Color3.fromRGB(235, 240, 255)
+    info.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+    info.TextStrokeTransparency = 0.25
     info.Text = ""
     info.ZIndex = 7
     info.Parent = box
@@ -9745,9 +9895,11 @@ function ChalloFX.BuildEmoteBox(wheel)
         nm.AnchorPoint = Vector2.new(0.5, 0.5)
         nm.Position = UDim2.new(0.5, 0, 0.9, 0)
         nm.Size = UDim2.new(0.94, 0, 0.17, 0)
-        nm.Font = Enum.Font.GothamMedium
+        nm.Font = Enum.Font.GothamBold
         nm.TextScaled = true
-        nm.TextColor3 = Color3.fromRGB(225, 225, 245)
+        nm.TextColor3 = Color3.fromRGB(245, 247, 255)
+        nm.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+        nm.TextStrokeTransparency = 0.25
         nm.Text = ""
         nm.ZIndex = 9
         nm.Parent = tile
@@ -9946,6 +10098,10 @@ task.spawn(function()
         local box = ChalloFX.Box
         if box and box.Parent and box.Parent.Visible then
             pcall(ChalloFX.UpdateEmoteBox)
+        end
+        local okw, wheelNow = checkEmotesMenuExists()
+        if okw and wheelNow and wheelNow.Visible then
+            pcall(ChalloFX.StyleWheelUI)
         end
         task.wait(0.1)
     end
