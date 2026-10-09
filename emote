@@ -1,5 +1,5 @@
 --[[ 
-    Challo_Boy Edition v1.3 (re-skinned: neon 16:9 UI, animations, sounds, auto-reapply on death)
+    Challo_Boy Edition v1.4 (themes: Default/Hacker/Cute/Robot/Sky; re-skinned: neon 16:9 UI, animations, sounds, auto-reapply on death)
     Source script taken from: https://github.com/Roblox/creator-docs/blob/main/content/en-us/characters/emotes.md
 
     scriptblox: https://scriptblox.com/script/Universal-Script-7yd7-I-Emote-Script-48024
@@ -135,7 +135,8 @@ Config = {
     UISounds = true,
     UIAnimations = true,
     UIVolume = 1,
-    EmoteBox = true
+    EmoteBox = true,
+    UITheme = "Default"
 }
 
 HUD = {
@@ -712,8 +713,8 @@ do
     local Debris = game:GetService("Debris")
 
     FX.Name = "Challo_Boy"
-    FX.Version = "1.3"
-    getgenv().ChalloBoyVersion = "1.3"
+    FX.Version = "1.4"
+    getgenv().ChalloBoyVersion = "1.4"
     FX.BaseScale = 1
     FX.LastToggle = 0
     FX.Colors = {
@@ -741,6 +742,147 @@ do
         ColorSequenceKeypoint.new(0.66, FX.Colors.Pink),
         ColorSequenceKeypoint.new(1, FX.Colors.Cyan)
     })
+
+    -- ================================================================ TEMA
+    local function mkSeq(list)
+        local kps = {}
+        for _, k in ipairs(list) do
+            kps[#kps + 1] = ColorSequenceKeypoint.new(k[1], Color3.fromRGB(k[2], k[3], k[4]))
+        end
+        return ColorSequence.new(kps)
+    end
+    local function loopOf(a, b, c)
+        return mkSeq({
+            {0, a[1], a[2], a[3]}, {0.33, b[1], b[2], b[3]},
+            {0.66, c[1], c[2], c[3]}, {1, a[1], a[2], a[3]}
+        })
+    end
+    local function rgb(r, g, b) return Color3.fromRGB(r, g, b) end
+    local function safeFont(name, fallback)
+        local ok, f = pcall(function() return Enum.Font[name] end)
+        if ok and f then return f end
+        return fallback
+    end
+
+    FX.ThemeOrder = {"Default", "Hacker", "Cute", "Robot", "Sky"}
+    FX.Themes = {
+        Default = {
+            name = "Default", tag = "NEON",
+            loop = FX.Loop, text = FX.RGB,
+            dark1 = rgb(10, 10, 26), dark2 = rgb(48, 16, 86),
+            tile1 = rgb(26, 24, 60), tile2 = rgb(58, 26, 100),
+            plate = rgb(18, 16, 42), accent = rgb(0, 229, 255), outline = rgb(0, 0, 10),
+            font = Enum.Font.GothamBold, fontBlack = Enum.Font.GothamBlack,
+            spark = {rgb(0, 229, 255), rgb(150, 90, 255), rgb(255, 70, 170), rgb(255, 255, 255)},
+            glyphs = {"●"}, fall = false,
+            introTitle = rgb(255, 255, 255), introSub = rgb(0, 229, 255),
+            introText = rgb(228, 232, 255), introOutline = rgb(25, 0, 60)
+        },
+        Hacker = {
+            name = "Hacker", tag = "MATRIX",
+            loop = loopOf({0, 255, 70}, {0, 150, 45}, {140, 255, 170}),
+            text = mkSeq({{0, 0, 255, 70}, {0.5, 170, 255, 190}, {1, 0, 255, 70}}),
+            dark1 = rgb(0, 6, 2), dark2 = rgb(0, 40, 14),
+            tile1 = rgb(0, 18, 6), tile2 = rgb(0, 52, 20),
+            plate = rgb(0, 14, 4), accent = rgb(0, 255, 70), outline = rgb(0, 0, 0),
+            font = safeFont("Code", Enum.Font.GothamBold), fontBlack = safeFont("Code", Enum.Font.GothamBlack),
+            spark = {rgb(0, 255, 70), rgb(0, 190, 55), rgb(150, 255, 180)},
+            glyphs = {"0", "1", "0", "1", "#"}, fall = true,
+            introTitle = rgb(0, 255, 90), introSub = rgb(160, 255, 190),
+            introText = rgb(0, 255, 70), introOutline = rgb(0, 30, 0)
+        },
+        Cute = {
+            name = "Cute", tag = "KAWAII",
+            loop = loopOf({255, 120, 190}, {190, 150, 255}, {255, 200, 120}),
+            text = mkSeq({{0, 255, 150, 205}, {0.5, 255, 255, 255}, {1, 255, 150, 205}}),
+            dark1 = rgb(70, 20, 80), dark2 = rgb(150, 50, 140),
+            tile1 = rgb(96, 36, 104), tile2 = rgb(170, 70, 160),
+            plate = rgb(88, 30, 98), accent = rgb(255, 150, 205), outline = rgb(70, 10, 60),
+            font = safeFont("FredokaOne", Enum.Font.GothamBold), fontBlack = safeFont("FredokaOne", Enum.Font.GothamBlack),
+            spark = {rgb(255, 150, 205), rgb(255, 255, 255), rgb(200, 170, 255), rgb(255, 225, 130)},
+            glyphs = {"♥", "★", "•"}, fall = false,
+            introTitle = rgb(255, 255, 255), introSub = rgb(255, 195, 228),
+            introText = rgb(255, 238, 250), introOutline = rgb(125, 20, 100)
+        },
+        Robot = {
+            name = "Robot", tag = "SYSTEM",
+            loop = loopOf({255, 150, 30}, {150, 170, 190}, {0, 200, 255}),
+            text = mkSeq({{0, 255, 170, 50}, {0.35, 240, 245, 250}, {0.7, 0, 210, 255}, {1, 255, 170, 50}}),
+            dark1 = rgb(14, 18, 24), dark2 = rgb(50, 60, 72),
+            tile1 = rgb(26, 32, 40), tile2 = rgb(58, 68, 82),
+            plate = rgb(22, 28, 36), accent = rgb(255, 150, 30), outline = rgb(0, 0, 0),
+            font = safeFont("SciFi", Enum.Font.GothamBold), fontBlack = safeFont("SciFi", Enum.Font.GothamBlack),
+            spark = {rgb(255, 150, 30), rgb(0, 200, 255), rgb(170, 185, 200)},
+            glyphs = {"+", "■", "="}, fall = false,
+            introTitle = rgb(255, 170, 50), introSub = rgb(0, 210, 255),
+            introText = rgb(238, 244, 250), introOutline = rgb(0, 0, 0)
+        },
+        Sky = {
+            name = "Sky", tag = "CLOUDS",
+            loop = loopOf({255, 255, 255}, {120, 200, 255}, {80, 160, 255}),
+            text = mkSeq({{0, 255, 255, 255}, {0.5, 175, 225, 255}, {1, 255, 255, 255}}),
+            dark1 = rgb(20, 70, 150), dark2 = rgb(90, 170, 255),
+            tile1 = rgb(40, 100, 190), tile2 = rgb(110, 185, 255),
+            plate = rgb(30, 84, 170), accent = rgb(190, 228, 255), outline = rgb(8, 36, 100),
+            font = Enum.Font.GothamBold, fontBlack = Enum.Font.GothamBlack,
+            spark = {rgb(255, 255, 255), rgb(190, 228, 255), rgb(140, 200, 255)},
+            glyphs = {"●", "•"}, fall = false,
+            introTitle = rgb(255, 255, 255), introSub = rgb(200, 232, 255),
+            introText = rgb(255, 255, 255), introOutline = rgb(10, 50, 130)
+        }
+    }
+    FX.Theme = FX.Themes.Default
+    FX.ThemeName = "Default"
+
+    -- daftar objek yang ikut berubah saat tema diganti
+    FX.Reg = {}
+    local function paintOne(e, force)
+        local g = e.g
+        if not g then return false end
+        if not force and not g.Parent then return false end
+        local T = FX.Theme
+        local k = e.k
+        if k == "stroke" then
+            g.Color = T.loop
+        elseif k == "text" then
+            g.Color = T.text
+            local p = g.Parent
+            if p and (p:IsA("TextLabel") or p:IsA("TextButton") or p:IsA("TextBox")) then
+                p.Font = p:GetAttribute("ChalloBlack") and T.fontBlack or T.font
+                p.TextStrokeColor3 = T.outline
+            end
+        elseif k == "panel" then
+            g.Color = ColorSequence.new(T.dark1, T.dark2)
+        elseif k == "tile" then
+            g.Color = ColorSequence.new(T.tile1, T.tile2)
+        elseif k == "accent" then
+            g.Color = T.accent
+        end
+        return true
+    end
+
+    function FX.Paint(g, kind)
+        local e = {g = g, k = kind}
+        table.insert(FX.Reg, e)
+        paintOne(e, true)
+        return g
+    end
+
+    function FX.SetTheme(name)
+        local T = FX.Themes[name] or FX.Themes.Default
+        FX.Theme = T
+        FX.ThemeName = T.name
+        local reg = FX.Reg
+        for i = #reg, 1, -1 do
+            if not pcall(function()
+                if not paintOne(reg[i], false) then error("dead") end
+            end) then
+                table.remove(reg, i)
+            end
+        end
+        if FX.OnTheme then pcall(FX.OnTheme, T) end
+        if ChalloFX.StyleWheelUI then pcall(ChalloFX.StyleWheelUI) end
+    end
 
     local function animOn()
         return not (Config and Config.UIAnimations == false)
@@ -839,7 +981,7 @@ do
         stroke.Parent = parent
         local g = Instance.new("UIGradient")
         g.Name = "ChalloStrokeGradient"
-        g.Color = FX.Loop
+        FX.Paint(g, "stroke")
         g.Parent = stroke
         FX.Spin(g, spinSpeed or 70)
         return stroke, g
@@ -855,13 +997,13 @@ do
     function FX.TextGradient(label, speed)
         local ex = label:FindFirstChild("ChalloTextGradient")
         if ex then return ex end
+        if label.Font == Enum.Font.GothamBlack then label:SetAttribute("ChalloBlack", true) end
         local g = Instance.new("UIGradient")
         g.Name = "ChalloTextGradient"
-        g.Color = FX.RGB
         g.Parent = label
+        FX.Paint(g, "text")
         FX.Spin(g, speed or 80)
         label.TextColor3 = Color3.new(1, 1, 1)
-        label.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
         label.TextStrokeTransparency = 0.2
         return g
     end
@@ -869,6 +1011,7 @@ do
     -- kontras otomatis: teks terang di latar gelap, teks gelap di latar terang
     function FX.Readable(obj)
         pcall(function()
+            if obj.Name == "P" and obj.Parent and obj.Parent.Name == "ChalloSparkles" then return end
             if obj:GetAttribute("ChalloRead") then return end
             obj:SetAttribute("ChalloRead", true)
             local function lum(c) return 0.299 * c.R + 0.587 * c.G + 0.114 * c.B end
@@ -879,18 +1022,18 @@ do
                 local cur = obj.Parent
                 while cur and cur:IsA("GuiObject") do
                     if cur.BackgroundTransparency < 0.85 then
-                        return lum(cur.BackgroundColor3)
+                        return cur:GetAttribute("ChalloLum") or lum(cur.BackgroundColor3)
                     end
                     cur = cur.Parent
                 end
                 return 0.1
             end
             local function fix()
-                if obj.Font ~= Enum.Font.GothamBold and obj.Font ~= Enum.Font.GothamBlack then
-                    obj.Font = Enum.Font.GothamBold
+                if obj.Font ~= FX.Theme.font and obj.Font ~= FX.Theme.fontBlack then
+                    obj.Font = FX.Theme.font
                 end
                 obj.TextTransparency = math.min(obj.TextTransparency, 0.05)
-                obj.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+                obj.TextStrokeColor3 = FX.Theme.outline
                 if obj.TextStrokeTransparency > 0.45 then obj.TextStrokeTransparency = 0.45 end
                 local bl, tl = bgLum(), lum(obj.TextColor3)
                 if bl <= 0.6 then
@@ -924,7 +1067,7 @@ do
         return true
     end
 
-    -- partikel kecil melayang ke atas + garis kilau yang menyapu
+    -- partikel bertema (titik / hati / angka matrix) + kilau yang menyapu
     function FX.Sparkles(parent, count, zindex)
         local z = zindex or 40
         local layer = Instance.new("Frame")
@@ -937,35 +1080,44 @@ do
         layer.ZIndex = z
         layer.Parent = parent
 
-        local cols = {FX.Colors.Cyan, FX.Colors.Purple, FX.Colors.Pink, FX.Colors.White}
         for i = 1, (count or 12) do
-            local p = Instance.new("Frame")
+            local p = Instance.new("TextLabel")
             p.Name = "P"
-            p.BorderSizePixel = 0
-            p.BackgroundColor3 = cols[math.random(1, #cols)]
-            local sz = math.random(2, 5)
-            p.Size = UDim2.fromOffset(sz, sz)
             p.BackgroundTransparency = 1
+            p.Font = Enum.Font.SourceSansBold
+            p.TextSize = 12
+            p.Text = "●"
+            p.TextTransparency = 1
+            p.AnchorPoint = Vector2.new(0.5, 0.5)
+            p.Size = UDim2.fromOffset(16, 16)
             p.Active = false
             p.ZIndex = z
             p.Parent = layer
-            FX.Corner(p, 99)
             task.spawn(function()
                 task.wait(math.random() * 4)
                 while p.Parent do
                     if not animOn() or not shown(layer) then
-                        p.BackgroundTransparency = 1
+                        p.TextTransparency = 1
                         task.wait(1)
                     else
+                        local T = FX.Theme
+                        p.Text = T.glyphs[math.random(1, #T.glyphs)]
+                        p.TextColor3 = T.spark[math.random(1, #T.spark)]
+                        p.TextSize = T.fall and math.random(10, 16) or math.random(7, 15)
                         local x = math.random()
                         local dur = 4 + math.random() * 5
-                        p.Position = UDim2.new(x, 0, 1.05, 0)
-                        p.BackgroundTransparency = 0.9
+                        local y0, y1, dx = 1.05, -0.05, (math.random() - 0.5) * 0.15
+                        if T.fall then
+                            y0, y1, dx = -0.05, 1.05, 0
+                            dur = 2.5 + math.random() * 3
+                        end
+                        p.Position = UDim2.new(x, 0, y0, 0)
+                        p.TextTransparency = 0.9
                         TweenService:Create(p, TweenInfo.new(dur, Enum.EasingStyle.Sine), {
-                            Position = UDim2.new(x + (math.random() - 0.5) * 0.15, 0, -0.05, 0)
+                            Position = UDim2.new(x + dx, 0, y1, 0)
                         }):Play()
                         TweenService:Create(p, TweenInfo.new(dur * 0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, true), {
-                            BackgroundTransparency = 0.45
+                            TextTransparency = 0.3
                         }):Play()
                         task.wait(dur)
                     end
@@ -991,10 +1143,9 @@ do
             while shine.Parent do
                 if animOn() and shown(layer) then
                     shine.Position = UDim2.new(-0.3, 0, 0.5, 0)
-                    local tw = TweenService:Create(shine, TweenInfo.new(1.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                    TweenService:Create(shine, TweenInfo.new(1.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
                         Position = UDim2.new(1.3, 0, 0.5, 0)
-                    })
-                    tw:Play()
+                    }):Play()
                 end
                 task.wait(5)
             end
@@ -1071,7 +1222,7 @@ do
         FX.Corner(card, 12)
 
         local bg = Instance.new("UIGradient")
-        bg.Color = ColorSequence.new(Color3.fromRGB(14, 12, 32), Color3.fromRGB(44, 18, 76))
+        FX.Paint(bg, "panel")
         bg.Rotation = 25
         bg.Parent = card
         FX.Stroke(card, 1.5, 80)
@@ -1133,7 +1284,7 @@ do
         accent.Size = UDim2.new(0, 4, 1, 0)
         accent.Parent = card
         local ag = Instance.new("UIGradient")
-        ag.Color = FX.Loop
+        FX.Paint(ag, "stroke")
         ag.Rotation = 90
         ag.Parent = accent
         FX.Spin(ag, 40)
@@ -1148,7 +1299,7 @@ do
         bar.Size = UDim2.new(1, 0, 0, 3)
         bar.Parent = card
         local bg2 = Instance.new("UIGradient")
-        bg2.Color = FX.Loop
+        FX.Paint(bg2, "stroke")
         bg2.Parent = bar
         FX.Spin(bg2, 90)
 
@@ -1231,14 +1382,19 @@ do
         -- ------------------------------ latar gradient halus (ikut tema)
         local bg = Instance.new("UIGradient")
         bg.Name = "ChalloBG"
-        bg.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-            ColorSequenceKeypoint.new(0.5, Color3.fromRGB(210, 190, 255)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 230, 255))
-        })
         bg.Rotation = 35
         bg.Parent = main
+        FX.Paint(bg, "panel")
         FX.Spin(bg, 10)
+
+        FX.OnTheme = function(T)
+            pcall(function()
+                local function l(c) return 0.299 * c.R + 0.587 * c.G + 0.114 * c.B end
+                main:SetAttribute("ChalloLum", (l(T.dark1) + l(T.dark2)) / 2)
+                main.BackgroundColor3 = Color3.new(1, 1, 1)
+            end)
+        end
+        FX.OnTheme(FX.Theme)
 
         -- garis aksen atas
         local top = Instance.new("Frame")
@@ -1250,7 +1406,7 @@ do
         top.ZIndex = 60
         top.Parent = main
         local topg = Instance.new("UIGradient")
-        topg.Color = FX.Loop
+        FX.Paint(topg, "stroke")
         topg.Parent = top
         FX.Spin(topg, 120)
 
@@ -1268,7 +1424,7 @@ do
         brand.Font = Enum.Font.GothamBold
         brand.TextSize = 10
         brand.TextXAlignment = Enum.TextXAlignment.Right
-        brand.Text = "CHALLO_BOY  •  EMOTE HUB  v1.3"
+        brand.Text = "CHALLO_BOY  •  EMOTE HUB  v1.4"
         brand.TextTransparency = 0.25
         brand.ZIndex = 61
         brand.Parent = main
@@ -1393,7 +1549,7 @@ do
             plate.Parent = btn
             FX.Corner(plate, 12)
             local g = Instance.new("UIGradient")
-            g.Color = ColorSequence.new(Color3.fromRGB(10, 10, 26), Color3.fromRGB(48, 16, 86))
+            FX.Paint(g, "panel")
             g.Rotation = 45
             g.Parent = plate
             local stroke = FX.Stroke(plate, 2, 100)
@@ -1447,6 +1603,7 @@ do
         if not animOn() then return end
         task.spawn(function()
             local ok, err = pcall(function()
+                local T = FX.Theme
                 local gui = Instance.new("ScreenGui")
                 gui.Name = "ChalloBoy_Intro"
                 gui.ResetOnSpawn = false
@@ -1461,161 +1618,312 @@ do
                 local dim = Instance.new("Frame")
                 dim.Name = "Dim"
                 dim.BorderSizePixel = 0
-                dim.BackgroundColor3 = Color3.new(0, 0, 0)
+                dim.BackgroundColor3 = T.dark1
                 dim.BackgroundTransparency = 1
                 dim.Size = UDim2.fromScale(1, 1)
                 dim.Parent = gui
-                FX.Tween(dim, 0.4, {BackgroundTransparency = 0.45}, Enum.EasingStyle.Sine)
+                FX.Tween(dim, 0.45, {BackgroundTransparency = 0.3}, Enum.EasingStyle.Sine)
 
+                -- kartu 16:9
                 local card = Instance.new("CanvasGroup")
                 card.Name = "Card"
                 card.AnchorPoint = Vector2.new(0.5, 0.5)
                 card.Position = UDim2.fromScale(0.5, 0.5)
-                card.Size = UDim2.fromOffset(480, 270)
+                card.Size = UDim2.fromOffset(560, 315)
                 card.BackgroundColor3 = Color3.new(1, 1, 1)
                 card.BorderSizePixel = 0
                 card.GroupTransparency = 1
                 card.Parent = gui
-                FX.Corner(card, 20)
+                FX.Corner(card, 4)
                 local ar = Instance.new("UIAspectRatioConstraint")
                 ar.AspectRatio = 16 / 9
                 ar.Parent = card
                 local bg = Instance.new("UIGradient")
-                bg.Color = ColorSequence.new(Color3.fromRGB(8, 8, 24), Color3.fromRGB(46, 16, 84))
                 bg.Rotation = 35
                 bg.Parent = card
+                FX.Paint(bg, "panel")
                 FX.Spin(bg, 15)
-                FX.Stroke(card, 2.5, 90)
+                FX.Stroke(card, 3, 90)
 
                 local cam = workspace.CurrentCamera
                 local vp = cam and cam.ViewportSize or Vector2.new(1280, 720)
-                local base = math.min((vp.X * 0.8) / 480, (vp.Y * 0.7) / 270, 1.3)
+                local base = math.min((vp.X * 0.84) / 560, (vp.Y * 0.74) / 315, 1.3)
                 local sc = Instance.new("UIScale")
                 sc.Scale = base * 0.7
                 sc.Parent = card
 
-                -- cincin gelombang
+                FX.Sparkles(card, T.fall and 40 or 24, 3)
+
+                -- garis scan yang menyapu dari atas ke bawah
+                local scan = Instance.new("Frame")
+                scan.Name = "Scan"
+                scan.Active = false
+                scan.BorderSizePixel = 0
+                scan.BackgroundColor3 = Color3.new(1, 1, 1)
+                scan.BackgroundTransparency = 0.35
+                scan.Size = UDim2.new(1, 0, 0, 2)
+                scan.Position = UDim2.new(0, 0, -0.05, 0)
+                scan.ZIndex = 4
+                scan.Parent = card
+                local sg = Instance.new("UIGradient")
+                sg.Parent = scan
+                FX.Paint(sg, "stroke")
+                FX.Spin(sg, 140)
+
+                -- emblem "CB"
+                local emblem = Instance.new("Frame")
+                emblem.Name = "Emblem"
+                emblem.AnchorPoint = Vector2.new(0.5, 0.5)
+                emblem.Position = UDim2.fromScale(0.5, 0.21)
+                emblem.Size = UDim2.fromOffset(70, 70)
+                emblem.BackgroundColor3 = Color3.new(1, 1, 1)
+                emblem.BorderSizePixel = 0
+                emblem.ZIndex = 6
+                emblem.Parent = card
+                FX.Corner(emblem, 4)
+                local eg = Instance.new("UIGradient")
+                eg.Rotation = 45
+                eg.Parent = emblem
+                FX.Paint(eg, "panel")
+                FX.Stroke(emblem, 2.5, 120)
+                local esc = Instance.new("UIScale")
+                esc.Scale = 0
+                esc.Parent = emblem
+
+                local mono = Instance.new("TextLabel")
+                mono.BackgroundTransparency = 1
+                mono.Size = UDim2.fromScale(1, 1)
+                mono.Font = T.fontBlack
+                mono.TextSize = 32
+                mono.Text = "CB"
+                mono.TextColor3 = T.introTitle
+                mono.TextStrokeColor3 = T.introOutline
+                mono.TextStrokeTransparency = 0
+                mono.ZIndex = 7
+                mono.Parent = emblem
+
+                -- cincin gelombang dari emblem
                 for i = 1, 2 do
                     local ring = Instance.new("Frame")
                     ring.Name = "Ring" .. i
                     ring.Active = false
                     ring.BackgroundTransparency = 1
                     ring.AnchorPoint = Vector2.new(0.5, 0.5)
-                    ring.Position = UDim2.fromScale(0.5, 0.42)
-                    ring.Size = UDim2.fromOffset(60, 60)
-                    ring.ZIndex = 1
+                    ring.Position = UDim2.fromScale(0.5, 0.21)
+                    ring.Size = UDim2.fromOffset(70, 70)
+                    ring.ZIndex = 5
                     ring.Parent = card
-                    FX.Corner(ring, 999)
+                    FX.Corner(ring, 4)
                     local rs = FX.Stroke(ring, 2, 120)
                     task.spawn(function()
-                        task.wait((i - 1) * 0.7)
+                        task.wait(0.6 + (i - 1) * 0.6)
                         for k = 1, 3 do
                             if not ring.Parent then return end
-                            ring.Size = UDim2.fromOffset(60, 60)
-                            rs.Transparency = 0.2
-                            FX.Tween(ring, 1.4, {Size = UDim2.fromOffset(420, 420)}, Enum.EasingStyle.Quad)
-                            FX.Tween(rs, 1.4, {Transparency = 1}, Enum.EasingStyle.Quad)
-                            task.wait(1.4)
+                            ring.Size = UDim2.fromOffset(70, 70)
+                            rs.Transparency = 0.1
+                            FX.Tween(ring, 1.3, {Size = UDim2.fromOffset(520, 292)}, Enum.EasingStyle.Quad)
+                            FX.Tween(rs, 1.3, {Transparency = 1}, Enum.EasingStyle.Quad)
+                            task.wait(1.3)
                         end
                     end)
                 end
 
-                FX.Sparkles(card, 18, 3)
+                -- judul: huruf muncul satu per satu (warna solid + outline tebal)
+                local titleRow = Instance.new("Frame")
+                titleRow.Name = "TitleRow"
+                titleRow.BackgroundTransparency = 1
+                titleRow.AnchorPoint = Vector2.new(0.5, 0.5)
+                titleRow.Position = UDim2.fromScale(0.5, 0.5)
+                titleRow.Size = UDim2.new(0.94, 0, 0, 62)
+                titleRow.ZIndex = 7
+                titleRow.Parent = card
+                local tl = Instance.new("UIListLayout")
+                tl.FillDirection = Enum.FillDirection.Horizontal
+                tl.HorizontalAlignment = Enum.HorizontalAlignment.Center
+                tl.VerticalAlignment = Enum.VerticalAlignment.Center
+                tl.SortOrder = Enum.SortOrder.LayoutOrder
+                tl.Parent = titleRow
 
-                local title = Instance.new("TextLabel")
-                title.Name = "Title"
-                title.BackgroundTransparency = 1
-                title.AnchorPoint = Vector2.new(0.5, 0.5)
-                title.Position = UDim2.fromScale(0.5, 0.42)
-                title.Size = UDim2.new(0.92, 0, 0, 64)
-                title.Font = Enum.Font.GothamBlack
-                title.TextSize = 50
-                title.Text = ""
-                title.ZIndex = 5
-                title.Parent = card
-                FX.TextGradient(title, 60)
+                local name = "Challo_Boy"
+                local letters = {}
+                for i = 1, #name do
+                    local l = Instance.new("TextLabel")
+                    l.Name = "L" .. i
+                    l.LayoutOrder = i
+                    l.BackgroundTransparency = 1
+                    l.Size = UDim2.new(0, 0, 1, 0)
+                    l.AutomaticSize = Enum.AutomaticSize.X
+                    l.Font = T.fontBlack
+                    l.TextSize = 24
+                    l.Text = name:sub(i, i)
+                    l.TextColor3 = T.introTitle
+                    l.TextStrokeColor3 = T.introOutline
+                    l.TextTransparency = 1
+                    l.TextStrokeTransparency = 1
+                    l.ZIndex = 8
+                    l.Parent = titleRow
+                    letters[i] = l
+                end
 
+                -- subtitle + label tema
                 local sub = Instance.new("TextLabel")
                 sub.Name = "Sub"
                 sub.BackgroundTransparency = 1
                 sub.AnchorPoint = Vector2.new(0.5, 0.5)
-                sub.Position = UDim2.fromScale(0.5, 0.62)
-                sub.Size = UDim2.new(0.9, 0, 0, 18)
-                sub.Font = Enum.Font.GothamBold
-                sub.TextSize = 13
-                sub.TextColor3 = Color3.fromRGB(190, 200, 255)
+                sub.Position = UDim2.fromScale(0.5, 0.645)
+                sub.Size = UDim2.new(0.9, 0, 0, 20)
+                sub.Font = T.font
+                sub.TextSize = 15
+                sub.Text = "E M O T E   H U B   •   v 1 . 4"
+                sub.TextColor3 = T.introSub
+                sub.TextStrokeColor3 = T.introOutline
+                sub.TextStrokeTransparency = 1
                 sub.TextTransparency = 1
-                sub.Text = "E M O T E   H U B   •   v 1 . 3"
-                sub.ZIndex = 5
+                sub.ZIndex = 8
                 sub.Parent = card
-                FX.TextGradient(sub)
 
+                local tag = Instance.new("TextLabel")
+                tag.Name = "ThemeTag"
+                tag.BackgroundColor3 = T.plate
+                tag.BackgroundTransparency = 1
+                tag.AnchorPoint = Vector2.new(0.5, 0.5)
+                tag.Position = UDim2.fromScale(0.5, 0.75)
+                tag.Size = UDim2.fromOffset(210, 22)
+                tag.Font = T.font
+                tag.TextSize = 12
+                tag.Text = "THEME  •  " .. string.upper(T.name) .. "  •  " .. T.tag
+                tag.TextColor3 = T.introText
+                tag.TextStrokeColor3 = T.introOutline
+                tag.TextStrokeTransparency = 1
+                tag.TextTransparency = 1
+                tag.ZIndex = 8
+                tag.Parent = card
+                FX.Corner(tag, 3)
+                local tagStroke = Instance.new("UIStroke")
+                tagStroke.Thickness = 1.5
+                tagStroke.Transparency = 1
+                tagStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+                tagStroke.Parent = tag
+                FX.Paint(tagStroke, "accent")
+
+                -- progress bar + persen + status
                 local status = Instance.new("TextLabel")
                 status.Name = "Status"
                 status.BackgroundTransparency = 1
-                status.AnchorPoint = Vector2.new(0.5, 0.5)
-                status.Position = UDim2.fromScale(0.5, 0.78)
-                status.Size = UDim2.new(0.6, 0, 0, 14)
-                status.Font = Enum.Font.Gotham
-                status.TextSize = 11
-                status.TextColor3 = Color3.fromRGB(160, 170, 210)
+                status.AnchorPoint = Vector2.new(0, 0.5)
+                status.Position = UDim2.fromScale(0.2, 0.845)
+                status.Size = UDim2.new(0.4, 0, 0, 16)
+                status.Font = T.font
+                status.TextSize = 12
+                status.TextXAlignment = Enum.TextXAlignment.Left
                 status.Text = "Initializing..."
-                status.ZIndex = 5
+                status.TextColor3 = T.introText
+                status.TextStrokeColor3 = T.introOutline
+                status.TextStrokeTransparency = 0.2
+                status.ZIndex = 8
                 status.Parent = card
-                FX.TextGradient(status)
+
+                local pct = Instance.new("TextLabel")
+                pct.Name = "Percent"
+                pct.BackgroundTransparency = 1
+                pct.AnchorPoint = Vector2.new(1, 0.5)
+                pct.Position = UDim2.fromScale(0.8, 0.845)
+                pct.Size = UDim2.new(0.2, 0, 0, 16)
+                pct.Font = T.fontBlack
+                pct.TextSize = 13
+                pct.TextXAlignment = Enum.TextXAlignment.Right
+                pct.Text = "0%"
+                pct.TextColor3 = T.introSub
+                pct.TextStrokeColor3 = T.introOutline
+                pct.TextStrokeTransparency = 0.2
+                pct.ZIndex = 8
+                pct.Parent = card
 
                 local track = Instance.new("Frame")
                 track.Name = "Track"
                 track.BorderSizePixel = 0
-                track.BackgroundColor3 = Color3.fromRGB(28, 28, 58)
+                track.BackgroundColor3 = T.plate
                 track.AnchorPoint = Vector2.new(0.5, 0.5)
-                track.Position = UDim2.fromScale(0.5, 0.86)
-                track.Size = UDim2.new(0.6, 0, 0, 6)
-                track.ZIndex = 5
+                track.Position = UDim2.fromScale(0.5, 0.91)
+                track.Size = UDim2.new(0.6, 0, 0, 8)
+                track.ZIndex = 8
                 track.Parent = card
-                FX.Corner(track, 99)
+                FX.Corner(track, 3)
+                FX.Stroke(track, 1.2, 100)
                 local fill = Instance.new("Frame")
                 fill.Name = "Fill"
                 fill.BorderSizePixel = 0
                 fill.BackgroundColor3 = Color3.new(1, 1, 1)
                 fill.Size = UDim2.new(0, 0, 1, 0)
-                fill.ZIndex = 6
+                fill.ZIndex = 9
                 fill.Parent = track
-                FX.Corner(fill, 99)
+                FX.Corner(fill, 3)
                 local fg = Instance.new("UIGradient")
-                fg.Color = FX.Loop
                 fg.Parent = fill
-                FX.Spin(fg, 140)
+                FX.Paint(fg, "stroke")
+                FX.Spin(fg, 160)
+
+                -- kilat putih saat selesai
+                local flash = Instance.new("Frame")
+                flash.Name = "Flash"
+                flash.Active = false
+                flash.BorderSizePixel = 0
+                flash.BackgroundColor3 = Color3.new(1, 1, 1)
+                flash.BackgroundTransparency = 1
+                flash.Size = UDim2.fromScale(1, 1)
+                flash.ZIndex = 20
+                flash.Parent = card
 
                 -- masuk
                 FX.Play("open")
                 FX.Tween(card, 0.6, {GroupTransparency = 0}, Enum.EasingStyle.Quad)
-                FX.Tween(sc, 0.7, {Scale = base}, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-                task.wait(0.5)
-
-                -- ketik judul
-                local name = "Challo_Boy"
-                for i = 1, #name do
-                    title.Text = name:sub(1, i)
-                    FX.Play("tick")
-                    task.wait(0.07)
-                end
-                FX.Tween(sub, 0.5, {TextTransparency = 0}, Enum.EasingStyle.Sine)
-
-                -- progress
-                FX.Tween(fill, 1.5, {Size = UDim2.new(1, 0, 1, 0)}, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
-                task.wait(0.5)
-                status.Text = "Loading emotes..."
-                task.wait(0.55)
-                status.Text = "Applying theme..."
-                task.wait(0.5)
-                status.Text = "Ready!"
+                FX.Tween(sc, 0.75, {Scale = base}, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                task.wait(0.35)
+                FX.Tween(scan, 1.6, {Position = UDim2.new(0, 0, 1.05, 0)}, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+                FX.Tween(esc, 0.6, {Scale = 1}, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
                 FX.Play("success")
                 task.wait(0.35)
 
+                -- huruf muncul
+                for i = 1, #letters do
+                    local l = letters[i]
+                    FX.Tween(l, 0.35, {TextSize = 52, TextTransparency = 0, TextStrokeTransparency = 0}, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                    FX.Play("tick")
+                    task.wait(0.07)
+                end
+                FX.Tween(sub, 0.5, {TextTransparency = 0, TextStrokeTransparency = 0.2}, Enum.EasingStyle.Sine)
+                task.wait(0.15)
+                FX.Tween(tag, 0.5, {TextTransparency = 0, TextStrokeTransparency = 0.3, BackgroundTransparency = 0.25}, Enum.EasingStyle.Sine)
+                FX.Tween(tagStroke, 0.5, {Transparency = 0.1}, Enum.EasingStyle.Sine)
+
+                -- progress
+                local msgs = {
+                    {0, "Initializing..."}, {25, "Loading emotes..."}, {55, "Applying theme..."},
+                    {80, "Preparing UI..."}, {100, "Ready!"}
+                }
+                local steps = 40
+                local mi = 1
+                for i = 0, steps do
+                    local p = i / steps
+                    local e = p * p * (3 - 2 * p)
+                    local percent = math.floor(e * 100 + 0.5)
+                    fill.Size = UDim2.new(e, 0, 1, 0)
+                    pct.Text = percent .. "%"
+                    while mi <= #msgs and percent >= msgs[mi][1] do
+                        status.Text = msgs[mi][2]
+                        mi = mi + 1
+                    end
+                    if i % 10 == 0 then FX.Play("tick") end
+                    task.wait(0.04)
+                end
+                FX.Play("success")
+                flash.BackgroundTransparency = 0.55
+                FX.Tween(flash, 0.45, {BackgroundTransparency = 1}, Enum.EasingStyle.Quad)
+                task.wait(0.5)
+
                 -- keluar
                 FX.Tween(card, 0.5, {GroupTransparency = 1}, Enum.EasingStyle.Quad)
-                FX.Tween(sc, 0.5, {Scale = base * 1.12}, Enum.EasingStyle.Quad)
+                FX.Tween(sc, 0.5, {Scale = base * 1.15}, Enum.EasingStyle.Quad)
                 FX.Tween(dim, 0.5, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
                 task.wait(0.6)
                 gui:Destroy()
@@ -1881,6 +2189,7 @@ getgenv().Notify = function(data)
 end
 
 local SettingsLib = SafeLoad("https://raw.githubusercontent.com/7yd7/Hub/refs/heads/Branch/GUIS/Settings.lua", "Settings Library")
+pcall(function() ChalloFX.SetTheme(Config.UITheme or "Default") end)
 pcall(function() ChalloFX.SkinSettings(SettingsLib) end)
 ChalloFX.Intro()
 
@@ -1963,6 +2272,20 @@ TogglesUI.NotifyEnabled = SettingsLib.AddToggle(GeneralTab, "Show Notifications"
     Config.NotifyEnabled = v
     SaveConfig()
 end)
+
+do
+    local themeNames = ChalloFX.ThemeOrder
+    local uiThemeDropdown = SettingsLib.AddDropdown(GeneralTab, "UI Theme", themeNames, Config.UITheme or "Default", function(v)
+        Config.UITheme = v
+        SaveConfig()
+        ChalloFX.SetTheme(v)
+        ChalloFX.Play("success")
+        getgenv().Notify({ Title = "Challo_Boy | Theme", Content = "Theme changed to " .. tostring(v), Duration = 2 })
+    end)
+    if uiThemeDropdown and uiThemeDropdown.Button then
+        uiThemeDropdown.Button.Text = (Config.UITheme or "Default") .. "  ▼"
+    end
+end
 
 TogglesUI.AutoReloadEnabled = SettingsLib.AddToggle(GeneralTab, "Auto Reapply on Death", "After you die: re-apply your last animation and restore the UI automatically", Config.AutoReloadEnabled, function(v)
     Config.AutoReloadEnabled = v
@@ -9646,7 +9969,7 @@ end
 -- ============================================================================
 function ChalloFX.StyleWheelUI()
     local FX = ChalloFX
-    local PLATE = Color3.fromRGB(18, 16, 42)
+    local PLATE = FX.Theme.plate
     local WHITE = Color3.fromRGB(245, 247, 255)
 
     local function custom(name, key)
@@ -9685,9 +10008,9 @@ function ChalloFX.StyleWheelUI()
         if not custom(el.Name, "TxtColor") and el.TextColor3 ~= WHITE then
             el.TextColor3 = WHITE
         end
-        if el.Font ~= Enum.Font.GothamBold then el.Font = Enum.Font.GothamBold end
+        if el.Font ~= FX.Theme.font then el.Font = FX.Theme.font end
         el.TextTransparency = 0
-        el.TextStrokeColor3 = Color3.fromRGB(0, 0, 10)
+        el.TextStrokeColor3 = FX.Theme.outline
         el.TextStrokeTransparency = 0.25
         if el:IsA("TextBox") then
             el.PlaceholderColor3 = Color3.fromRGB(185, 192, 230)
@@ -9794,7 +10117,7 @@ function ChalloFX.BuildEmoteBox(wheel)
 
     FX.Corner(box, 18)
     local bg = Instance.new("UIGradient")
-    bg.Color = ColorSequence.new(Color3.fromRGB(8, 8, 24), Color3.fromRGB(48, 16, 86))
+    FX.Paint(bg, "panel")
     bg.Rotation = 35
     bg.Parent = box
     FX.Spin(bg, 12)
@@ -9853,7 +10176,7 @@ function ChalloFX.BuildEmoteBox(wheel)
     line.ZIndex = 7
     line.Parent = box
     local lg = Instance.new("UIGradient")
-    lg.Color = FX.Loop
+    FX.Paint(lg, "stroke")
     lg.Parent = line
     FX.Spin(lg, 100)
 
@@ -9877,7 +10200,7 @@ function ChalloFX.BuildEmoteBox(wheel)
         FX.Corner(tile, 12)
 
         local tg = Instance.new("UIGradient")
-        tg.Color = ColorSequence.new(Color3.fromRGB(26, 24, 60), Color3.fromRGB(58, 26, 100))
+        FX.Paint(tg, "tile")
         tg.Rotation = 60
         tg.Parent = tile
 
@@ -9885,9 +10208,9 @@ function ChalloFX.BuildEmoteBox(wheel)
         ts.Name = "TileStroke"
         ts.Thickness = 1.2
         ts.Transparency = 0.45
-        ts.Color = FX.Colors.Cyan
         ts.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
         ts.Parent = tile
+        FX.Paint(ts, "accent")
 
         local hs = Instance.new("UIScale")
         hs.Name = "HoverScale"
